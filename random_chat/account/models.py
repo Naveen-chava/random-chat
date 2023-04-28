@@ -66,17 +66,13 @@ class UserProfile(AbstractDateTimeStamp):
         return f"{self.user.username} Profile"
 
     def get_status(self) -> str:
-        return UserStatusType.get_string_for_type(self.status)
-
-    def set_status(self, status):
-        self.status = status
-        self.save()
+        return UserStatusType.get_string_for_value(self.status)
 
     def get_gender(self) -> str:
-        return UserGenderType.get_string_for_type(self.gender)
+        return UserGenderType.get_string_for_value(self.gender)
 
     @classmethod
-    def create_profile(cls, user, status=None, age=None, gender=None):
+    def create_profile(cls, user, status=None, age=None, gender=None) -> "UserProfile":
         profile = cls(user=user)
         if status:
             profile.status = status

@@ -1,11 +1,15 @@
-from typing import Union, List
+import uuid
+from typing import Union
 
 from rest_framework.request import Request
-from django.contrib.auth import authenticate, login, logout, get_user_model
+from django.contrib.auth import authenticate, login, get_user_model
+from django.core.validators import validate_email
+
 
 from auth.models import AuthToken
 from account.models import UserProfile
 from account.api.serializers import UserProfileSerializer
+from common.constants import UserGenderType, UserStatusType
 
 
 User = get_user_model()
@@ -72,7 +76,47 @@ def svc_account_login_user(request: Request, serialized: bool = True) -> Union[s
     return token
 
 
-def svc_account_logout_user(request: Request) -> None:
-    # delete auth token and then logout
-    request.user.auth_token.delete()
-    logout(request)
+def svc_account_logout_user(user: User) -> None:
+    # Just deleting the auth token is enough for the logout
+    user.auth_token.delete()
+
+
+def _get_user_from_user_id(user_id: uuid.UUID) -> User:
+    return User.objects.get(external_id=user_id)
+
+
+def svc_account_update_user_profile(request_data: dict, user: User, serialized: bool = True) -> Union[User, dict]:
+    # user = _get_user_from_user_id(user_id)
+
+    if "name" in request_data:
+        first_name = request_data["name"].get("first_name")
+        last_name = request_data["name"].get("last_name")
+
+        user.first_name = first_name
+        user.last_name = last_name
+
+    if "email" in request_data:
+        validate_email(request_data["email"])  # throws validation error
+        user.email = request_data["email"]
+
+    if "is_active" in request_data:
+        user.is_active = request_data["is_active"]
+
+    if "password" in request_data:
+        user.set_password(request_data["password"])
+
+    if "gender" in request_data:
+        user.user_profile.gender = UserGenderType.get_obj_for_string(request_data["gender"])  # throws key error
+
+    if "status" in request_data:
+        user.user_profile.status = UserStatusType.get_obj_for_string(request_data["status"])  # throws key error
+
+    if "age" in request_data:
+        user.user_profile.age = request_data["age"]
+
+    user.user_profile.save()
+    user.save()
+
+    if serialized:
+        return UserProfileSerializer(user.user_profile, many=False).data
+    return user

@@ -1,0 +1,7 @@
+# Copy paste the below variables in .env file
+
+SECRET_KEY='django-insecure-3qa4p*zzdwqdr160&=_ce5rn8k_4=2q6qyyj*sb97uo%)y1p%2'
+
+IS_LOCAL=True
+IS_PROD=False
+
