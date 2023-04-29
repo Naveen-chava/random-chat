@@ -11,8 +11,9 @@ class AbstractExternalID(models.Model):
     class Meta:
         abstract = True
 
-    def get_external_id(self, hex=False) -> Union[UUID, str]:
-        return self.external_id.hex if hex else self.external_id
+    def get_external_id(self, _str=False) -> Union[UUID, str]:
+        # pass _str=True if you need the external_id in 'str' format else it'll be returned as uuid obj
+        return self.external_id.hex if _str else self.external_id
 
 
 class AbstractDateTimeStamp(models.Model):
